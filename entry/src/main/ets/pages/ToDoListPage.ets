@@ -33,6 +33,7 @@ struct ToDoListPage {
   @State private pendingExpanded: boolean = true;
   @State private showEditorSheet: boolean = false;
   @State private currentTab: number = 0;
+  @State private sheetSessionKey: number = 0;
 
   private static readonly WEEK_NAMES: Array<string> = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
   private static readonly TITLE_MAX_LENGTH: number = 100;
@@ -166,11 +167,13 @@ struct ToDoListPage {
     this.draftDueAt = target.dueAt;
     this.draftReminderOn = target.reminderAt !== null;
     this.draftRemark = '';
+    this.sheetSessionKey = this.sheetSessionKey + 1;
     this.showEditorSheet = true;
   }
 
   private handleOpenAdd(): void {
     this.resetDraft();
+    this.sheetSessionKey = this.sheetSessionKey + 1;
     this.showEditorSheet = true;
   }
 
@@ -202,6 +205,8 @@ struct ToDoListPage {
     const selectedDate = this.draftDueAt === null ? new Date() : new Date(this.draftDueAt);
     this.getUIContext().showDatePickerDialog({
       selected: selectedDate,
+      showTime: true,
+      useMilitaryTime: true,
       onDateAccept: (date: Date) => {
         this.draftDueAt = date.getTime();
       }
@@ -213,6 +218,8 @@ struct ToDoListPage {
     const selectedDate = target?.dueAt === null || target === undefined ? new Date() : new Date(target.dueAt);
     this.getUIContext().showDatePickerDialog({
       selected: selectedDate,
+      showTime: true,
+      useMilitaryTime: true,
       onDateAccept: (date: Date) => {
         DataModel.updateTaskDueAt(taskId, date.getTime());
         const nextTask = DataModel.updateTaskReminderAt(taskId, date.getTime());
@@ -477,20 +484,22 @@ struct ToDoListPage {
 
   @Builder sheetTitleInput() {
     Column({ space: 6 }) {
-      TextArea({
-        placeholder: '请输入任务内容...',
-        text: this.draftTitle
-      })
-        .fontSize($r('app.float.sheet_label_font_size'))
-        .backgroundColor($r('app.color.input_background'))
-        .borderRadius($r('app.float.sheet_card_radius'))
-        .height($r('app.float.sheet_textarea_height'))
-        .width(CommonConstants.FULL_LENGTH)
-        .maxLength(ToDoListPage.TITLE_MAX_LENGTH)
-        .padding({ left: 14, right: 14, top: 12, bottom: 28 })
-        .onChange((value: string) => {
-          this.draftTitle = value;
+      ForEach([this.sheetSessionKey], (key: number) => {
+        TextArea({
+          placeholder: '请输入任务内容...',
+          text: this.draftTitle
         })
+          .fontSize($r('app.float.sheet_label_font_size'))
+          .backgroundColor($r('app.color.input_background'))
+          .borderRadius($r('app.float.sheet_card_radius'))
+          .height($r('app.float.sheet_textarea_height'))
+          .width(CommonConstants.FULL_LENGTH)
+          .maxLength(ToDoListPage.TITLE_MAX_LENGTH)
+          .padding({ left: 14, right: 14, top: 12, bottom: 28 })
+          .onChange((value: string) => {
+            this.draftTitle = value;
+          })
+      }, (key: number) => `title-${key}`)
 
       Row() {
         Blank()
@@ -514,20 +523,22 @@ struct ToDoListPage {
       }
       .width(CommonConstants.FULL_LENGTH)
 
-      TextArea({
-        placeholder: '添加备注信息...',
-        text: this.draftRemark
-      })
-        .fontSize($r('app.float.sheet_label_font_size'))
-        .backgroundColor($r('app.color.input_background'))
-        .borderRadius($r('app.float.sheet_card_radius'))
-        .height($r('app.float.sheet_remark_height'))
-        .width(CommonConstants.FULL_LENGTH)
-        .maxLength(ToDoListPage.REMARK_MAX_LENGTH)
-        .padding({ left: 14, right: 14, top: 12, bottom: 24 })
-        .onChange((value: string) => {
-          this.draftRemark = value;
+      ForEach([this.sheetSessionKey], (key: number) => {
+        TextArea({
+          placeholder: '添加备注信息...',
+          text: this.draftRemark
         })
+          .fontSize($r('app.float.sheet_label_font_size'))
+          .backgroundColor($r('app.color.input_background'))
+          .borderRadius($r('app.float.sheet_card_radius'))
+          .height($r('app.float.sheet_remark_height'))
+          .width(CommonConstants.FULL_LENGTH)
+          .maxLength(ToDoListPage.REMARK_MAX_LENGTH)
+          .padding({ left: 14, right: 14, top: 12, bottom: 24 })
+          .onChange((value: string) => {
+            this.draftRemark = value;
+          })
+      }, (key: number) => `remark-${key}`)
 
       Row() {
         Blank()
