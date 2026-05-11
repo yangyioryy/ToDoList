@@ -400,15 +400,15 @@ struct ToDoListPage {
     .backgroundColor($r('app.color.card_background'))
   }
 
-  @Builder sheetSection(label: string, value: string, icon: string, onClick?: () => void) {
+  @Builder dueSection() {
     Row({ space: 10 }) {
-      Text(icon)
+      Text('📅')
         .fontSize(18)
-      Text(label)
+      Text($r('app.string.sheet_due_label'))
         .fontSize($r('app.float.sheet_label_font_size'))
         .fontColor($r('app.color.title_primary'))
       Blank()
-      Text(value)
+      Text(this.getDraftDueText())
         .fontSize($r('app.float.sheet_label_font_size'))
         .fontColor($r('app.color.meta_text'))
       Text('›')
@@ -420,9 +420,33 @@ struct ToDoListPage {
     .borderRadius($r('app.float.sheet_card_radius'))
     .backgroundColor($r('app.color.card_background'))
     .onClick(() => {
-      if (onClick !== undefined) {
-        onClick();
-      }
+      this.handlePickDraftDueAt();
+    })
+  }
+
+  @Builder reminderSection() {
+    Row({ space: 10 }) {
+      Text('🔔')
+        .fontSize(18)
+      Text($r('app.string.sheet_reminder_label'))
+        .fontSize($r('app.float.sheet_label_font_size'))
+        .fontColor($r('app.color.title_primary'))
+      Blank()
+      Text(this.draftReminderOn
+        ? $r('app.string.sheet_reminder_value')
+        : $r('app.string.sheet_reminder_off'))
+        .fontSize($r('app.float.sheet_label_font_size'))
+        .fontColor($r('app.color.meta_text'))
+      Text('›')
+        .fontSize(20)
+        .fontColor($r('app.color.meta_text'))
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+    .borderRadius($r('app.float.sheet_card_radius'))
+    .backgroundColor($r('app.color.card_background'))
+    .onClick(() => {
+      this.draftReminderOn = !this.draftReminderOn;
     })
   }
 
@@ -520,12 +544,8 @@ struct ToDoListPage {
     Column({ space: 16 }) {
       this.sheetHeader()
       this.sheetTitleInput()
-      this.sheetSection('截止时间', this.getDraftDueText(), '📅', () => {
-        this.handlePickDraftDueAt();
-      })
-      this.sheetSection('提醒', this.draftReminderOn ? '提前 30 分钟' : '已关闭', '🔔', () => {
-        this.draftReminderOn = !this.draftReminderOn;
-      })
+      this.dueSection()
+      this.reminderSection()
       this.sheetRemarkInput()
 
       Button(this.editingTaskId === null ? '添加任务' : '保存修改')
