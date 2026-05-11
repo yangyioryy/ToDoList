@@ -19,6 +19,106 @@
     {
       "name": "task_section_title",
       "value": "任务清单"
+    },
+    {
+      "name": "greeting_morning",
+      "value": "Hi，早上好！"
+    },
+    {
+      "name": "greeting_emoji",
+      "value": "👋"
+    },
+    {
+      "name": "progress_card_label",
+      "value": "今日完成进度"
+    },
+    {
+      "name": "encouragement_text",
+      "value": "继续加油，今天也要元气满满哦！"
+    },
+    {
+      "name": "group_completed",
+      "value": "已完成"
+    },
+    {
+      "name": "group_pending",
+      "value": "待完成"
+    },
+    {
+      "name": "empty_tasks_title",
+      "value": "暂无任务"
+    },
+    {
+      "name": "empty_tasks_subtitle",
+      "value": "点击右下角的 + 添加第一项任务吧"
+    },
+    {
+      "name": "badge_due_soon",
+      "value": "即将到期"
+    },
+    {
+      "name": "badge_overdue",
+      "value": "已逾期"
+    },
+    {
+      "name": "sheet_title_add",
+      "value": "添加新任务"
+    },
+    {
+      "name": "sheet_title_edit",
+      "value": "编辑任务"
+    },
+    {
+      "name": "sheet_content_placeholder",
+      "value": "请输入任务内容..."
+    },
+    {
+      "name": "sheet_due_label",
+      "value": "截止时间"
+    },
+    {
+      "name": "sheet_due_unset",
+      "value": "未设置"
+    },
+    {
+      "name": "sheet_reminder_label",
+      "value": "提醒"
+    },
+    {
+      "name": "sheet_reminder_value",
+      "value": "提前 30 分钟"
+    },
+    {
+      "name": "sheet_reminder_off",
+      "value": "已关闭"
+    },
+    {
+      "name": "sheet_remark_label",
+      "value": "备注（可选）"
+    },
+    {
+      "name": "sheet_remark_placeholder",
+      "value": "添加备注信息..."
+    },
+    {
+      "name": "sheet_submit_add",
+      "value": "添加任务"
+    },
+    {
+      "name": "sheet_submit_edit",
+      "value": "保存修改"
+    },
+    {
+      "name": "tab_tasks",
+      "value": "任务"
+    },
+    {
+      "name": "tab_stats",
+      "value": "统计"
+    },
+    {
+      "name": "tab_settings",
+      "value": "设置"
     }
   ]
 }
