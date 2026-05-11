@@ -1,82 +1,49 @@
-# 待办列表（ArkTS）
+# ✅ ToDoList
 
-## 项目说明
+> 一个基于 ArkTS 的 HarmonyOS 待办事项应用，聚焦任务管理和完成情况统计。
 
-本项目已从原始 Codelab 示例改造成课程作业版待办应用，当前支持：
+## ✨ 已有功能
 
-- 任务新增、编辑、删除、完成/取消完成
-- `Task` 领域模型与统一排序
-- 本地持久化恢复
-- 顶部日期、完成进度、任务统计
-- 截止日期、前台临期/逾期提示、提醒开关
-- 逻辑层单元测试与本地 hvigor `test`
+- 📝 任务管理：支持新增、编辑、删除任务，以及标记完成 / 取消完成
+- ⏰ 截止时间：支持为任务设置截止时间，并展示临期 / 逾期状态
+- 🔔 提醒开关：支持为任务切换提醒状态
+- 📚 分组展示：任务按已完成 / 待完成分组展示，支持折叠查看
+- 📊 统计分析：提供今日完成概览、完成数、待完成数、连续完成天数、完成日历和近期趋势图
+- 💾 本地持久化：任务数据会保存在本地，重新打开应用后仍可恢复
 
-当前仓库里的 `screenshots/device/ToDoList.gif` 是原始示例素材，不再代表最终功能，以本 README 和本地运行结果为准。
+## 🖼️ 运行截图
 
-## 功能清单
+### 🧾 任务页
 
-### 任务模型与排序
+![任务页](asset/任务页.png)
 
-- 每条任务包含 `id`、`title`、`isCompleted`、`createdAt`、`dueAt`、`completedAt`、`reminderAt`
-- 已完成任务排在前面，并按完成时间倒序
-- 未完成任务排在后面，优先按截止时间升序，再按创建时间倒序
+### ➕ 新增任务
 
-### 页面与交互
+![新增任务](asset/新增任务.png)
 
-- 顶部展示欢迎语、当天日期、完成进度条、完成/待处理统计、提醒调度数量
-- 中部提供内嵌新增/编辑表单，可输入标题并选择截止日期
-- 列表支持滚动查看，空态与数据态会自动切换
-- 卡片支持：
-  - 点击标题区域切换完成/取消完成
-  - 编辑标题
-  - 修改截止日期
-  - 删除任务
-  - 打开/关闭提醒
+### 📈 统计页
 
-### 提醒能力
+![统计页](asset/统计页.png)
 
-- 已交付：前台临期/逾期可视化、提醒开关、提醒调度服务层
-- 降级边界：当前版本未接真机系统通知权限与通知发布 API
-- 结论：课程环境下可稳定演示前台提醒逻辑；若要做系统通知，需要在真机上补权限与通知接入
+## 🚀 怎么运行
 
-## 构建与测试
+1. 使用 DevEco Studio 打开项目根目录。
+2. 等待工程同步完成，并确保 HarmonyOS SDK 已正确安装。
+3. 连接模拟器或真机，选择 `entry` 模块运行。
+4. 应用启动后默认进入任务页，可以直接开始添加和管理任务。
 
-本机实际使用的是 DevEco 自带 hvigor 工具链：
+## 📖 怎么使用
 
-```powershell
-D:\DevEco Studio\tools\hvigor\bin\hvigorw.bat assembleHap
-D:\DevEco Studio\tools\hvigor\bin\hvigorw.bat test
-```
+1. 点击右下角 `+` 按钮，输入任务内容，可选设置截止时间和提醒状态。
+2. 在任务列表中点击左侧圆圈，可切换任务完成状态。
+3. 点击任务卡片右侧 `⋮` 菜单，可编辑任务、修改截止时间、切换提醒或删除任务。
+4. 切换到底部 `统计` 标签页，可查看完成概览、完成日历和近期趋势。
 
-本次真实验证结果：
+## 🗂️ 项目结构
 
-- `assembleHap`：通过
-- `test`：通过
-- 单测结果：`entry/.test/default/intermediates/test/coverage_data/test_result.txt`
-- HTML 报告：`entry/.test/default/outputs/test/reports/index.html`
-
-## 演示路线
-
-建议课堂演示顺序：
-
-1. 启动应用，展示顶部日期、统计与进度条。
-2. 新增一条带截止日期的任务，观察任务立即进入列表。
-3. 打开提醒，展示卡片上的提醒状态。
-4. 点击任务标题区域，展示完成后自动排序到前面，并出现完成时间。
-5. 编辑任务标题与截止日期，确认页面立即刷新。
-6. 删除任务，确认列表和统计同步变化。
-7. 杀进程后重新打开应用，展示任务、完成态、时间信息仍能恢复。
-8. 运行 `hvigorw.bat test`，展示逻辑单测通过。
-
-## 已知限制
-
-1. `build-profile.json5` 没有签名配置，当前默认产物是未签名 HAP。
-2. `DatePickerDialog.show` 已切到 `UIContext.showDatePickerDialog`，但系统通知仍未接入真机能力。
-3. `hvigor test` 会输出来自 `@ohos/hypium` 依赖自身的 ArkTS warning，这些 warning 不影响当前测试通过。
-4. 课程环境路径若包含受限制字符，hvigor 可能报项目路径检查错误；当前工作目录已验证可以构建。
-
-## 环境要求
-
-1. Stage 模型 HarmonyOS 工程。
-2. 当前本机编译配置为 `6.1.0(23)`。
-3. 推荐使用本机已验证的 DevEco / Harmony SDK 工具链。
+- `entry/src/main/ets/pages/ToDoListPage.ets`：任务页与底部标签页入口
+- `entry/src/main/ets/view/ToDoItem.ets`：任务卡片与快捷操作菜单
+- `entry/src/main/ets/view/StatsTab.ets`：统计页界面与趋势图绘制
+- `entry/src/main/ets/viewmodel/DataModel.ets`：任务数据管理与本地持久化
+- `entry/src/main/ets/service/ReminderService.ets`：提醒状态同步逻辑
+- `asset/`：README 使用的实际运行截图
