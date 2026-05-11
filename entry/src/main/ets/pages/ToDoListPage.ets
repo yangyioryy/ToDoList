@@ -683,11 +683,6 @@ struct ToDoListPage {
         this.placeholderTabContent('统计', '📊', '统计功能即将上线')
       }
       .tabBar(this.tabBarItem('统计', '📊', 1))
-
-      TabContent() {
-        this.placeholderTabContent('设置', '⚙️', '设置功能即将上线')
-      }
-      .tabBar(this.tabBarItem('设置', '⚙️', 2))
     }
     .barHeight($r('app.float.tab_bar_height'))
     .barMode(BarMode.Fixed)
