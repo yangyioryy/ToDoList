@@ -13,17 +13,11 @@
 
 ## 🖼️ 运行截图
 
-### 🧾 任务页
-
-![任务页](asset/任务页.png)
-
-### ➕ 新增任务
-
-![新增任务](asset/新增任务.png)
-
-### 📈 统计页
-
-![统计页](asset/统计页.png)
+<p align="center">
+  <img src="asset/任务页.png" alt="任务页" width="30%" />
+  <img src="asset/新增任务.png" alt="新增任务" width="30%" />
+  <img src="asset/统计页.png" alt="统计页" width="30%" />
+</p>
 
 ## 🚀 怎么运行
 
