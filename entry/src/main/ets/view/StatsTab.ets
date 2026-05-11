@@ -31,12 +31,21 @@ interface CalendarCell {
   dateKey: string;
 }
 
+interface TrendPoint {
+  x: number;
+  y: number;
+}
+
 @Component
 export default struct StatsTab {
-  @Prop totalTasks: Array<Task> = [];
+  @Prop @Watch('onTasksChanged') totalTasks: Array<Task> = [];
   @State private currentRange: RangeKey = 'day';
   @State private calendarYear: number = new Date().getFullYear();
   @State private calendarMonth: number = new Date().getMonth();
+
+  private trendSettings: RenderingContextSettings = new RenderingContextSettings(true);
+  private trendCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.trendSettings);
+  private isTrendCanvasReady: boolean = false;
 
   private static readonly RANGE_OPTIONS: Array<RangeOption> = [
     { key: 'day', label: $r('app.string.range_day') },
@@ -180,6 +189,126 @@ export default struct StatsTab {
     const now = new Date();
     this.calendarYear = now.getFullYear();
     this.calendarMonth = now.getMonth();
+  }
+
+  private padZero(value: number): string {
+    return `${value}`.padStart(2, '0');
+  }
+
+  private getRecentTrend(days: number): Array<number> {
+    const completedMap = this.getCompletedMap();
+    const result: Array<number> = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      result.push(completedMap.get(key) ?? 0);
+    }
+    return result;
+  }
+
+  private getRecentTrendLabels(days: number): Array<string> {
+    const result: Array<string> = [];
+    const now = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      result.push(`${this.padZero(d.getMonth() + 1)}/${this.padZero(d.getDate())}`);
+    }
+    return result;
+  }
+
+  private onTasksChanged(): void {
+    this.drawTrend();
+  }
+
+  private drawTrend(): void {
+    if (!this.isTrendCanvasReady) {
+      return;
+    }
+    const ctx = this.trendCtx;
+    const width = ctx.width;
+    const height = ctx.height;
+    if (width <= 0 || height <= 0) {
+      return;
+    }
+
+    ctx.clearRect(0, 0, width, height);
+
+    const data = this.getRecentTrend(7);
+    const labels = this.getRecentTrendLabels(7);
+    let maxValue = 10;
+    data.forEach((v: number) => {
+      if (v > maxValue) {
+        maxValue = v;
+      }
+    });
+
+    const paddingLeft = 30;
+    const paddingRight = 12;
+    const paddingTop = 14;
+    const paddingBottom = 28;
+    const innerW = width - paddingLeft - paddingRight;
+    const innerH = height - paddingTop - paddingBottom;
+
+    ctx.font = '10vp sans-serif';
+    ctx.strokeStyle = '#EEF0F3';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#9CA3AF';
+    const yLabels: Array<number> = [0, 5, 10];
+    yLabels.forEach((v: number) => {
+      const y = paddingTop + innerH * (1 - v / maxValue);
+      ctx.beginPath();
+      ctx.moveTo(paddingLeft, y);
+      ctx.lineTo(paddingLeft + innerW, y);
+      ctx.stroke();
+      ctx.fillText(`${v}`, 6, y + 4);
+    });
+
+    const points: Array<TrendPoint> = [];
+    data.forEach((value: number, i: number) => {
+      points.push({
+        x: paddingLeft + (innerW / (data.length - 1)) * i,
+        y: paddingTop + innerH * (1 - value / maxValue)
+      });
+    });
+
+    const gradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + innerH);
+    gradient.addColorStop(0, 'rgba(124, 92, 255, 0.35)');
+    gradient.addColorStop(1, 'rgba(124, 92, 255, 0.02)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, paddingTop + innerH);
+    points.forEach((p: TrendPoint) => {
+      ctx.lineTo(p.x, p.y);
+    });
+    ctx.lineTo(points[points.length - 1].x, paddingTop + innerH);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#7C5CFF';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((p: TrendPoint, i: number) => {
+      if (i === 0) {
+        ctx.moveTo(p.x, p.y);
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = '#7C5CFF';
+    points.forEach((p: TrendPoint) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.fillStyle = '#9CA3AF';
+    ctx.textAlign = 'center';
+    labels.forEach((label: string, i: number) => {
+      ctx.fillText(label, points[i].x, height - 8);
+    });
   }
 
   @Builder header() {
@@ -539,6 +668,30 @@ export default struct StatsTab {
     .shadow({ radius: 12, color: $r('app.color.card_shadow'), offsetX: 0, offsetY: 2 })
   }
 
+  @Builder trendCard() {
+    Column({ space: 10 }) {
+      Text($r('app.string.trend_title'))
+        .fontSize($r('app.float.trend_title_font_size'))
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.title_primary'))
+        .width(CommonConstants.FULL_LENGTH)
+        .textAlign(TextAlign.Start)
+
+      Canvas(this.trendCtx)
+        .width(CommonConstants.FULL_LENGTH)
+        .height($r('app.float.trend_chart_height'))
+        .onReady(() => {
+          this.isTrendCanvasReady = true;
+          this.drawTrend();
+        })
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding($r('app.float.hero_padding'))
+    .borderRadius($r('app.float.card_radius'))
+    .backgroundColor($r('app.color.stats_card_background'))
+    .shadow({ radius: 12, color: $r('app.color.card_shadow'), offsetX: 0, offsetY: 2 })
+  }
+
   build() {
     Scroll() {
       Column({ space: 16 }) {
@@ -547,6 +700,7 @@ export default struct StatsTab {
         this.todayOverviewCard()
         this.statBoxRow()
         this.calendarCard()
+        this.trendCard()
         Blank().height(60)
       }
       .width(CommonConstants.FULL_LENGTH)
