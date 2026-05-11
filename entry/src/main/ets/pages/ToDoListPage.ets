@@ -26,6 +26,8 @@ struct ToDoListPage {
   @State private draftTitle: string = '';
   @State private draftDueAt: number | null = null;
   @State private editingTaskId: string | null = null;
+  @State private completedExpanded: boolean = true;
+  @State private pendingExpanded: boolean = true;
 
   private static readonly WEEK_NAMES: Array<string> = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
@@ -75,6 +77,14 @@ struct ToDoListPage {
 
   private getPendingCount(): number {
     return this.totalTasks.length - this.getCompletedCount();
+  }
+
+  private getCompletedTasks(): Array<Task> {
+    return this.totalTasks.filter((task: Task) => task.isCompleted);
+  }
+
+  private getPendingTasks(): Array<Task> {
+    return this.totalTasks.filter((task: Task) => !task.isCompleted);
   }
 
   private buildDraft(): TaskDraft {
@@ -364,21 +374,86 @@ struct ToDoListPage {
     .backgroundColor($r('app.color.editor_background'))
   }
 
+  @Builder groupHeader(title: string, count: number, isCompleted: boolean, isExpanded: boolean, onToggle: () => void) {
+    Row({ space: 8 }) {
+      if (isCompleted) {
+        Stack() {
+          Text('✓')
+            .fontSize(12)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(Color.White)
+        }
+        .width(20)
+        .height(20)
+        .borderRadius(20)
+        .backgroundColor($r('app.color.completed_check'))
+      } else {
+        Stack()
+          .width(20)
+          .height(20)
+          .borderRadius(20)
+          .border({ width: 2, color: $r('app.color.tab_active') })
+      }
+
+      Text(`${title} (${count})`)
+        .fontSize($r('app.float.group_title_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.title_primary'))
+
+      Blank()
+
+      Text(isExpanded ? '⌃' : '⌄')
+        .fontSize(18)
+        .fontColor($r('app.color.meta_text'))
+        .rotate({ angle: isExpanded ? 180 : 0 })
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding({ left: 4, right: 4, top: 4, bottom: 4 })
+    .onClick(() => {
+      this.getUIContext().animateToImmediately({ duration: 180, curve: Curve.EaseInOut }, () => {
+        onToggle();
+      });
+    })
+  }
+
+  @Builder taskItem(item: Task) {
+    ToDoItem({
+      task: item,
+      onToggle: (taskId: string) => {
+        this.handleToggleTask(taskId);
+      },
+      onEditTask: (taskId: string) => {
+        this.handleEditTask(taskId);
+      },
+      onDelete: (taskId: string) => {
+        this.handleDeleteTask(taskId);
+      },
+      onEditDueDate: (taskId: string) => {
+        this.handlePickTaskDueAt(taskId);
+      },
+      onReminderToggle: (taskId: string) => {
+        this.handleReminderToggle(taskId);
+      }
+    })
+  }
+
   @Builder emptyState() {
     Column({ space: 8 }) {
-      Text('还没有待办事项')
+      Text('🗒️')
+        .fontSize(40)
+      Text($r('app.string.empty_tasks_title'))
         .fontSize($r('app.float.section_title_font_size'))
         .fontWeight(FontWeight.Medium)
-        .fontColor($r('app.color.hero_title'))
-      Text('先在上面的输入框里添加一条今天想完成的任务。')
+        .fontColor($r('app.color.title_primary'))
+      Text($r('app.string.empty_tasks_subtitle'))
         .fontSize($r('app.float.meta_font_size'))
         .fontColor($r('app.color.meta_text'))
         .textAlign(TextAlign.Center)
     }
     .width(CommonConstants.FULL_LENGTH)
     .padding($r('app.float.empty_state_padding'))
-    .borderRadius(CommonConstants.BORDER_RADIUS)
-    .backgroundColor($r('app.color.editor_background'))
+    .borderRadius($r('app.float.card_radius'))
+    .backgroundColor($r('app.color.card_background'))
   }
 
   build() {
@@ -387,35 +462,30 @@ struct ToDoListPage {
         this.statsCard()
         this.editorCard()
 
-        Text($r('app.string.task_section_title'))
-          .fontSize($r('app.float.section_title_font_size'))
-          .fontWeight(FontWeight.Medium)
-          .width(CommonConstants.FULL_LENGTH)
-          .textAlign(TextAlign.Start)
-
         if (this.totalTasks.length === 0) {
           this.emptyState()
         } else {
-          ForEach(this.totalTasks, (item: Task) => {
-            ToDoItem({
-              task: item,
-              onToggle: (taskId: string) => {
-                this.handleToggleTask(taskId);
-              },
-              onEditTask: (taskId: string) => {
-                this.handleEditTask(taskId);
-              },
-              onDelete: (taskId: string) => {
-                this.handleDeleteTask(taskId);
-              },
-              onEditDueDate: (taskId: string) => {
-                this.handlePickTaskDueAt(taskId);
-              },
-              onReminderToggle: (taskId: string) => {
-                this.handleReminderToggle(taskId);
-              }
+          if (this.getCompletedCount() > 0) {
+            this.groupHeader('已完成', this.getCompletedCount(), true, this.completedExpanded, () => {
+              this.completedExpanded = !this.completedExpanded;
             })
-          }, (item: Task) => item.id)
+            if (this.completedExpanded) {
+              ForEach(this.getCompletedTasks(), (item: Task) => {
+                this.taskItem(item)
+              }, (item: Task) => item.id)
+            }
+          }
+
+          if (this.getPendingCount() > 0) {
+            this.groupHeader('待完成', this.getPendingCount(), false, this.pendingExpanded, () => {
+              this.pendingExpanded = !this.pendingExpanded;
+            })
+            if (this.pendingExpanded) {
+              ForEach(this.getPendingTasks(), (item: Task) => {
+                this.taskItem(item)
+              }, (item: Task) => item.id)
+            }
+          }
         }
       }
       .width(CommonConstants.FULL_LENGTH)
