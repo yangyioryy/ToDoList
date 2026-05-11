@@ -16,6 +16,7 @@
 import DataModel from '../viewmodel/DataModel';
 import CommonConstants from '../common/constant/CommonConstant';
 import ToDoItem from '../view/ToDoItem';
+import StatsTab from '../view/StatsTab';
 import { Task, TaskDraft } from '../model/Task';
 import ReminderService from '../service/ReminderService';
 
@@ -680,7 +681,7 @@ struct ToDoListPage {
       .tabBar(this.tabBarItem('任务', '✓', 0))
 
       TabContent() {
-        this.placeholderTabContent('统计', '📊', '统计功能即将上线')
+        StatsTab({ totalTasks: this.totalTasks })
       }
       .tabBar(this.tabBarItem('统计', '📊', 1))
     }

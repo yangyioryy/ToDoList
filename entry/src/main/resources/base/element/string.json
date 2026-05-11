@@ -119,6 +119,58 @@
     {
       "name": "tab_settings",
       "value": "设置"
+    },
+    {
+      "name": "stats_page_title",
+      "value": "统计"
+    },
+    {
+      "name": "range_day",
+      "value": "日"
+    },
+    {
+      "name": "range_week",
+      "value": "周"
+    },
+    {
+      "name": "range_month",
+      "value": "月"
+    },
+    {
+      "name": "range_year",
+      "value": "年"
+    },
+    {
+      "name": "today_summary_title",
+      "value": "今日完成情况"
+    },
+    {
+      "name": "today_summary_total_label",
+      "value": "完成任务数"
+    },
+    {
+      "name": "stats_box_completed",
+      "value": "已完成"
+    },
+    {
+      "name": "stats_box_pending",
+      "value": "待完成"
+    },
+    {
+      "name": "stats_box_streak",
+      "value": "连续完成天数"
+    },
+    {
+      "name": "calendar_back_today",
+      "value": "回到今天"
+    },
+    {
+      "name": "calendar_hint",
+      "value": "完成任务数（点击日期查看详情）"
+    },
+    {
+      "name": "trend_title",
+      "value": "近期完成趋势"
     }
   ]
 }

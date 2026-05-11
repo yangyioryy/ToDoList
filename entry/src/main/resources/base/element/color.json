@@ -191,6 +191,94 @@
     {
       "name": "calendar_icon_bg",
       "value": "#FFE7C5"
+    },
+    {
+      "name": "segment_active_bg",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "segment_inactive_text",
+      "value": "#9CA3AF"
+    },
+    {
+      "name": "segment_track_bg",
+      "value": "#F1F2F5"
+    },
+    {
+      "name": "stats_card_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "stats_big_number",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "stats_purple_text",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "stats_box_completed_bg",
+      "value": "#E8F8EE"
+    },
+    {
+      "name": "stats_box_pending_bg",
+      "value": "#EAEDFF"
+    },
+    {
+      "name": "stats_box_streak_bg",
+      "value": "#FFF4D6"
+    },
+    {
+      "name": "stats_box_pending_circle",
+      "value": "#6B7AFF"
+    },
+    {
+      "name": "stats_box_streak_star",
+      "value": "#F59E0B"
+    },
+    {
+      "name": "calendar_today_bg",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "calendar_today_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "calendar_weekday_text",
+      "value": "#9CA3AF"
+    },
+    {
+      "name": "calendar_other_month_text",
+      "value": "#D1D5DB"
+    },
+    {
+      "name": "calendar_dot",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "back_to_today_bg",
+      "value": "#F3F4F6"
+    },
+    {
+      "name": "trend_line",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "trend_fill_start",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "trend_fill_end",
+      "value": "#7C5CFF"
+    },
+    {
+      "name": "trend_grid",
+      "value": "#EEF0F3"
+    },
+    {
+      "name": "trend_axis_text",
+      "value": "#9CA3AF"
     }
   ]
 }

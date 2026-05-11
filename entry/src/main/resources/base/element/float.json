@@ -207,6 +207,74 @@
     {
       "name": "wheel_item_active_font_size",
       "value": "20fp"
+    },
+    {
+      "name": "stats_page_title_font_size",
+      "value": "28fp"
+    },
+    {
+      "name": "segment_font_size",
+      "value": "14fp"
+    },
+    {
+      "name": "segment_height",
+      "value": "36vp"
+    },
+    {
+      "name": "today_total_number_font_size",
+      "value": "40fp"
+    },
+    {
+      "name": "today_total_unit_font_size",
+      "value": "14fp"
+    },
+    {
+      "name": "stats_box_number_font_size",
+      "value": "22fp"
+    },
+    {
+      "name": "stats_box_label_font_size",
+      "value": "12fp"
+    },
+    {
+      "name": "stats_box_icon_size",
+      "value": "20vp"
+    },
+    {
+      "name": "calendar_month_font_size",
+      "value": "16fp"
+    },
+    {
+      "name": "calendar_weekday_font_size",
+      "value": "12fp"
+    },
+    {
+      "name": "calendar_day_font_size",
+      "value": "14fp"
+    },
+    {
+      "name": "calendar_day_count_font_size",
+      "value": "10fp"
+    },
+    {
+      "name": "calendar_cell_size",
+      "value": "40vp"
+    },
+    {
+      "name": "calendar_today_circle_size",
+      "value": "30vp"
+    },
+    {
+      "name": "back_today_font_size",
+      "value": "12fp"
+    },
+    {
+      "name": "trend_chart_height",
+      "value": "160vp"
+    },
+    {
+      "name": "trend_title_font_size",
+      "value": "15fp"
     }
   ]
 }
