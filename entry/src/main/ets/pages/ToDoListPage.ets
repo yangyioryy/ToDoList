@@ -27,6 +27,8 @@ struct ToDoListPage {
   @State private draftDueAt: number | null = null;
   @State private editingTaskId: string | null = null;
 
+  private static readonly WEEK_NAMES: Array<string> = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
   private formatDate(date: Date): string {
     const year = date.getFullYear();
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -42,7 +44,29 @@ struct ToDoListPage {
   }
 
   private getTodayText(): string {
-    return `今天是 ${this.formatDate(new Date())}`;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const weekday = ToDoListPage.WEEK_NAMES[now.getDay()];
+    return `今天是 ${year}年${month}月${day}日  ${weekday}`;
+  }
+
+  private getGreetingText(): string {
+    const hour = new Date().getHours();
+    if (hour < 5) {
+      return 'Hi，夜深了！';
+    }
+    if (hour < 11) {
+      return 'Hi，早上好！';
+    }
+    if (hour < 14) {
+      return 'Hi，中午好！';
+    }
+    if (hour < 18) {
+      return 'Hi，下午好！';
+    }
+    return 'Hi，晚上好！';
   }
 
   private getCompletedCount(): number {
@@ -171,51 +195,98 @@ struct ToDoListPage {
     });
   }
 
-  @Builder statsCard() {
-    Column({ space: 10 }) {
-      Text('Hi，开始安排今天吧')
-        .fontSize($r('app.float.hero_title_font_size'))
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.hero_title'))
-        .width(CommonConstants.FULL_LENGTH)
-        .textAlign(TextAlign.Start)
+  @Builder greetingHeader() {
+    Row({ space: 12 }) {
+      Stack() {
+        Text('🧑')
+          .fontSize(26)
+      }
+      .width($r('app.float.avatar_size'))
+      .height($r('app.float.avatar_size'))
+      .borderRadius($r('app.float.avatar_size'))
+      .backgroundColor($r('app.color.avatar_background'))
 
-      Text(this.getTodayText())
-        .fontSize($r('app.float.meta_font_size'))
-        .fontColor($r('app.color.meta_text'))
-        .width(CommonConstants.FULL_LENGTH)
-        .textAlign(TextAlign.Start)
+      Column({ space: 4 }) {
+        Row({ space: 4 }) {
+          Text(this.getGreetingText())
+            .fontSize($r('app.float.greeting_font_size'))
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.title_primary'))
+          Text('👋')
+            .fontSize($r('app.float.greeting_font_size'))
+        }
 
-      Progress({
-        value: this.getCompletedCount(),
-        total: this.totalTasks.length === 0 ? 1 : this.totalTasks.length,
-        type: ProgressType.Linear
-      })
-        .color($r('app.color.progress_fill'))
-        .backgroundColor($r('app.color.progress_track'))
-        .height($r('app.float.progress_height'))
-        .borderRadius(CommonConstants.BORDER_RADIUS)
-
-      Row() {
-        Text(`已完成 ${this.getCompletedCount()} 项`)
-          .fontSize($r('app.float.meta_font_size'))
-          .fontColor($r('app.color.hero_title'))
-        Blank()
-        Text(`待处理 ${this.getPendingCount()} 项`)
-          .fontSize($r('app.float.meta_font_size'))
+        Text(this.getTodayText())
+          .fontSize($r('app.float.date_font_size'))
           .fontColor($r('app.color.meta_text'))
       }
-      .width(CommonConstants.FULL_LENGTH)
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
 
-      Text(`提醒调度：${ReminderService.getScheduledReminderCount()} 项`)
-        .fontSize($r('app.float.meta_font_size'))
-        .fontColor($r('app.color.meta_text'))
-        .width(CommonConstants.FULL_LENGTH)
-        .textAlign(TextAlign.Start)
+      Stack() {
+        Text('📅')
+          .fontSize(20)
+      }
+      .width($r('app.float.calendar_button_size'))
+      .height($r('app.float.calendar_button_size'))
+      .borderRadius(12)
+      .backgroundColor($r('app.color.calendar_icon_bg'))
     }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding({ left: 4, right: 4 })
+  }
+
+  @Builder progressCard() {
+    Row() {
+      Column({ space: 10 }) {
+        Row() {
+          Text($r('app.string.progress_card_label'))
+            .fontSize($r('app.float.progress_label_font_size'))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.title_primary'))
+          Blank()
+          Text(`${this.getCompletedCount()} / ${this.totalTasks.length}`)
+            .fontSize($r('app.float.progress_count_font_size'))
+            .fontColor($r('app.color.meta_text'))
+        }
+        .width(CommonConstants.FULL_LENGTH)
+
+        Progress({
+          value: this.getCompletedCount(),
+          total: this.totalTasks.length === 0 ? 1 : this.totalTasks.length,
+          type: ProgressType.Linear
+        })
+          .color($r('app.color.progress_fill'))
+          .backgroundColor($r('app.color.progress_track'))
+          .height($r('app.float.progress_height'))
+          .borderRadius($r('app.float.progress_height'))
+          .width(CommonConstants.FULL_LENGTH)
+
+        Text($r('app.string.encouragement_text'))
+          .fontSize($r('app.float.encouragement_font_size'))
+          .fontColor($r('app.color.meta_text'))
+          .width(CommonConstants.FULL_LENGTH)
+          .textAlign(TextAlign.Start)
+      }
+      .layoutWeight(1)
+
+      Text('🪴')
+        .fontSize(44)
+        .margin({ left: 12 })
+    }
+    .width(CommonConstants.FULL_LENGTH)
     .padding($r('app.float.hero_padding'))
-    .borderRadius(CommonConstants.BORDER_RADIUS)
-    .backgroundColor($r('app.color.hero_background'))
+    .borderRadius($r('app.float.card_radius'))
+    .backgroundColor($r('app.color.card_background'))
+    .shadow({ radius: 12, color: $r('app.color.card_shadow'), offsetX: 0, offsetY: 2 })
+  }
+
+  @Builder statsCard() {
+    Column({ space: 14 }) {
+      this.greetingHeader()
+      this.progressCard()
+    }
+    .width(CommonConstants.FULL_LENGTH)
   }
 
   @Builder editorCard() {
