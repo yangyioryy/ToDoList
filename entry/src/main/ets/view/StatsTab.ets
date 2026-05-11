@@ -23,10 +23,20 @@ interface RangeOption {
   label: ResourceStr;
 }
 
+interface CalendarCell {
+  day: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  completedCount: number;
+  dateKey: string;
+}
+
 @Component
 export default struct StatsTab {
   @Prop totalTasks: Array<Task> = [];
   @State private currentRange: RangeKey = 'day';
+  @State private calendarYear: number = new Date().getFullYear();
+  @State private calendarMonth: number = new Date().getMonth();
 
   private static readonly RANGE_OPTIONS: Array<RangeOption> = [
     { key: 'day', label: $r('app.string.range_day') },
@@ -34,6 +44,8 @@ export default struct StatsTab {
     { key: 'month', label: $r('app.string.range_month') },
     { key: 'year', label: $r('app.string.range_year') }
   ];
+
+  private static readonly WEEKDAY_LABELS: Array<string> = ['日', '一', '二', '三', '四', '五', '六'];
 
   private getDateKey(timestamp: number): string {
     const d = new Date(timestamp);
@@ -90,6 +102,84 @@ export default struct StatsTab {
       return 0;
     }
     return Math.round(this.getTodayCompletedCount() / this.totalTasks.length * 100);
+  }
+
+  private getCalendarCells(): Array<CalendarCell> {
+    const firstDay = new Date(this.calendarYear, this.calendarMonth, 1);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = new Date(this.calendarYear, this.calendarMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(this.calendarYear, this.calendarMonth, 0).getDate();
+
+    const completedMap = this.getCompletedMap();
+    const todayKey = this.getDateKey(Date.now());
+    const cells: Array<CalendarCell> = [];
+
+    for (let i = startWeekday - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      const prevMonth = this.calendarMonth - 1;
+      const adjustedYear = prevMonth < 0 ? this.calendarYear - 1 : this.calendarYear;
+      const adjustedMonth = (prevMonth + 12) % 12;
+      const dateKey = `${adjustedYear}-${adjustedMonth + 1}-${day}`;
+      cells.push({
+        day,
+        isCurrentMonth: false,
+        isToday: false,
+        completedCount: completedMap.get(dateKey) ?? 0,
+        dateKey
+      });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateKey = `${this.calendarYear}-${this.calendarMonth + 1}-${d}`;
+      cells.push({
+        day: d,
+        isCurrentMonth: true,
+        isToday: dateKey === todayKey,
+        completedCount: completedMap.get(dateKey) ?? 0,
+        dateKey
+      });
+    }
+
+    while (cells.length < 42) {
+      const offset = cells.length - startWeekday - daysInMonth + 1;
+      const nextMonth = this.calendarMonth + 1;
+      const adjustedYear = nextMonth > 11 ? this.calendarYear + 1 : this.calendarYear;
+      const adjustedMonth = nextMonth % 12;
+      const dateKey = `${adjustedYear}-${adjustedMonth + 1}-${offset}`;
+      cells.push({
+        day: offset,
+        isCurrentMonth: false,
+        isToday: false,
+        completedCount: completedMap.get(dateKey) ?? 0,
+        dateKey
+      });
+    }
+
+    return cells;
+  }
+
+  private goToPrevMonth(): void {
+    if (this.calendarMonth === 0) {
+      this.calendarMonth = 11;
+      this.calendarYear = this.calendarYear - 1;
+    } else {
+      this.calendarMonth = this.calendarMonth - 1;
+    }
+  }
+
+  private goToNextMonth(): void {
+    if (this.calendarMonth === 11) {
+      this.calendarMonth = 0;
+      this.calendarYear = this.calendarYear + 1;
+    } else {
+      this.calendarMonth = this.calendarMonth + 1;
+    }
+  }
+
+  private backToToday(): void {
+    const now = new Date();
+    this.calendarYear = now.getFullYear();
+    this.calendarMonth = now.getMonth();
   }
 
   @Builder header() {
@@ -313,6 +403,142 @@ export default struct StatsTab {
     .width(CommonConstants.FULL_LENGTH)
   }
 
+  @Builder calendarHeader() {
+    Row() {
+      Row({ space: 8 }) {
+        Text('‹')
+          .fontSize(20)
+          .fontColor($r('app.color.meta_text'))
+          .width(24)
+          .height(24)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.goToPrevMonth();
+          })
+
+        Text(`${this.calendarYear}年${this.calendarMonth + 1}月`)
+          .fontSize($r('app.float.calendar_month_font_size'))
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.title_primary'))
+
+        Text('›')
+          .fontSize(20)
+          .fontColor($r('app.color.meta_text'))
+          .width(24)
+          .height(24)
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.goToNextMonth();
+          })
+      }
+
+      Blank()
+
+      Text($r('app.string.calendar_back_today'))
+        .fontSize($r('app.float.back_today_font_size'))
+        .fontColor($r('app.color.sub_text'))
+        .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+        .borderRadius(12)
+        .backgroundColor($r('app.color.back_to_today_bg'))
+        .onClick(() => {
+          this.backToToday();
+        })
+    }
+    .width(CommonConstants.FULL_LENGTH)
+  }
+
+  @Builder calendarWeekdayRow() {
+    Row() {
+      ForEach(StatsTab.WEEKDAY_LABELS, (label: string) => {
+        Text(label)
+          .fontSize($r('app.float.calendar_weekday_font_size'))
+          .fontColor($r('app.color.calendar_weekday_text'))
+          .layoutWeight(1)
+          .textAlign(TextAlign.Center)
+      }, (label: string) => label)
+    }
+    .width(CommonConstants.FULL_LENGTH)
+  }
+
+  @Builder calendarCell(cell: CalendarCell) {
+    Column() {
+      if (cell.isToday) {
+        Stack() {
+          Text(`${cell.day}`)
+            .fontSize($r('app.float.calendar_day_font_size'))
+            .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.calendar_today_text'))
+        }
+        .width($r('app.float.calendar_today_circle_size'))
+        .height($r('app.float.calendar_today_circle_size'))
+        .borderRadius($r('app.float.calendar_today_circle_size'))
+        .backgroundColor($r('app.color.calendar_today_bg'))
+      } else {
+        Text(`${cell.day}`)
+          .fontSize($r('app.float.calendar_day_font_size'))
+          .fontColor(cell.isCurrentMonth
+            ? $r('app.color.title_primary')
+            : $r('app.color.calendar_other_month_text'))
+          .height($r('app.float.calendar_today_circle_size'))
+          .textAlign(TextAlign.Center)
+      }
+
+      if (cell.completedCount > 0 && cell.isCurrentMonth) {
+        Text(`${cell.completedCount}`)
+          .fontSize($r('app.float.calendar_day_count_font_size'))
+          .fontColor($r('app.color.calendar_dot'))
+          .margin({ top: 2 })
+      } else {
+        Text(' ')
+          .fontSize($r('app.float.calendar_day_count_font_size'))
+          .margin({ top: 2 })
+      }
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .height($r('app.float.calendar_cell_size'))
+    .alignItems(HorizontalAlign.Center)
+    .justifyContent(FlexAlign.Center)
+  }
+
+  @Builder calendarGrid() {
+    Grid() {
+      ForEach(this.getCalendarCells(), (cell: CalendarCell) => {
+        GridItem() {
+          this.calendarCell(cell)
+        }
+      }, (cell: CalendarCell) => cell.dateKey)
+    }
+    .columnsTemplate('1fr 1fr 1fr 1fr 1fr 1fr 1fr')
+    .rowsTemplate('1fr 1fr 1fr 1fr 1fr 1fr')
+    .rowsGap(4)
+    .columnsGap(0)
+    .width(CommonConstants.FULL_LENGTH)
+    .height(260)
+  }
+
+  @Builder calendarCard() {
+    Column({ space: 12 }) {
+      this.calendarHeader()
+      this.calendarWeekdayRow()
+      this.calendarGrid()
+
+      Row({ space: 6 }) {
+        Text('·')
+          .fontSize(14)
+          .fontColor($r('app.color.calendar_dot'))
+        Text($r('app.string.calendar_hint'))
+          .fontSize($r('app.float.task_meta_font_size'))
+          .fontColor($r('app.color.meta_text'))
+      }
+      .width(CommonConstants.FULL_LENGTH)
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding($r('app.float.hero_padding'))
+    .borderRadius($r('app.float.card_radius'))
+    .backgroundColor($r('app.color.stats_card_background'))
+    .shadow({ radius: 12, color: $r('app.color.card_shadow'), offsetX: 0, offsetY: 2 })
+  }
+
   build() {
     Scroll() {
       Column({ space: 16 }) {
@@ -320,6 +546,7 @@ export default struct StatsTab {
         this.rangeSelector()
         this.todayOverviewCard()
         this.statBoxRow()
+        this.calendarCard()
         Blank().height(60)
       }
       .width(CommonConstants.FULL_LENGTH)
