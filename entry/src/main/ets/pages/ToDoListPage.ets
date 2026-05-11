@@ -16,33 +16,341 @@
 import DataModel from '../viewmodel/DataModel';
 import CommonConstants from '../common/constant/CommonConstant';
 import ToDoItem from '../view/ToDoItem';
+import { Task, TaskDraft } from '../model/Task';
+import ReminderService from '../service/ReminderService';
 
 @Entry
 @Component
 struct ToDoListPage {
-  private totalTasks: Array<string> = [];
+  @State private totalTasks: Array<Task> = [];
+  @State private draftTitle: string = '';
+  @State private draftDueAt: number | null = null;
+  @State private editingTaskId: string | null = null;
+
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatTimestamp(timestamp: number | null): string {
+    if (timestamp === null) {
+      return '未设置';
+    }
+    return this.formatDate(new Date(timestamp));
+  }
+
+  private getTodayText(): string {
+    return `今天是 ${this.formatDate(new Date())}`;
+  }
+
+  private getCompletedCount(): number {
+    return this.totalTasks.filter((task: Task) => task.isCompleted).length;
+  }
+
+  private getPendingCount(): number {
+    return this.totalTasks.length - this.getCompletedCount();
+  }
+
+  private buildDraft(): TaskDraft {
+    return {
+      title: this.draftTitle,
+      dueAt: this.draftDueAt,
+      reminderAt: this.draftDueAt
+    };
+  }
+
+  private resetDraft(): void {
+    this.draftTitle = '';
+    this.draftDueAt = null;
+    this.editingTaskId = null;
+  }
 
   aboutToAppear() {
-    this.totalTasks = DataModel.getData();
+    this.refreshTasks();
+    ReminderService.syncAll(this.totalTasks);
+  }
+
+  private refreshTasks(): void {
+    this.totalTasks = DataModel.getTasks();
+  }
+
+  private handleToggleTask(taskId: string): void {
+    this.getUIContext().animateToImmediately({ duration: 180, curve: Curve.EaseInOut }, () => {
+      DataModel.toggleTask(taskId);
+      this.refreshTasks();
+      ReminderService.syncAll(this.totalTasks);
+    });
+  }
+
+  private handleDeleteTask(taskId: string): void {
+    this.getUIContext().animateToImmediately({ duration: 180, curve: Curve.EaseInOut }, () => {
+      DataModel.deleteTask(taskId);
+      ReminderService.cancelTask(taskId, 'task_deleted');
+      if (this.editingTaskId === taskId) {
+        this.resetDraft();
+      }
+      this.refreshTasks();
+    });
+  }
+
+  private handleReminderToggle(taskId: string): void {
+    const target = this.totalTasks.find((task: Task) => task.id === taskId);
+    if (target === undefined) {
+      return;
+    }
+
+    if (target.reminderAt === null) {
+      const reminderAt = target.dueAt ?? (Date.now() + 60 * 60 * 1000);
+      const nextTask = DataModel.updateTaskReminderAt(taskId, reminderAt);
+      if (nextTask !== undefined) {
+        ReminderService.syncTask(nextTask);
+      }
+      } else {
+        DataModel.updateTaskReminderAt(taskId, null);
+        ReminderService.cancelTask(taskId, 'reminder_disabled');
+      }
+    this.refreshTasks();
+  }
+
+  private handleEditTask(taskId: string): void {
+    const target = this.totalTasks.find((task: Task) => task.id === taskId);
+    if (target === undefined) {
+      return;
+    }
+
+    this.editingTaskId = taskId;
+    this.draftTitle = target.title;
+    this.draftDueAt = target.dueAt;
+  }
+
+  private handleSaveTask(): void {
+    try {
+      this.getUIContext().animateToImmediately({ duration: 220, curve: Curve.EaseInOut }, () => {
+        if (this.editingTaskId === null) {
+          const nextTask = DataModel.addTask(this.buildDraft());
+          ReminderService.syncTask(nextTask);
+        } else {
+          const nextTask = DataModel.updateTask(this.editingTaskId, this.buildDraft());
+          if (nextTask !== undefined) {
+            ReminderService.syncTask(nextTask);
+          }
+        }
+        this.resetDraft();
+        this.refreshTasks();
+      });
+    } catch (error) {
+      console.info(`save task failed: ${JSON.stringify(error)}`);
+    }
+  }
+
+  private handlePickDraftDueAt(): void {
+    const selectedDate = this.draftDueAt === null ? new Date() : new Date(this.draftDueAt);
+    this.getUIContext().showDatePickerDialog({
+      selected: selectedDate,
+      onDateAccept: (date: Date) => {
+        this.draftDueAt = date.getTime();
+      }
+    });
+  }
+
+  private handlePickTaskDueAt(taskId: string): void {
+    const target = this.totalTasks.find((task: Task) => task.id === taskId);
+    const selectedDate = target?.dueAt === null || target === undefined ? new Date() : new Date(target.dueAt);
+    this.getUIContext().showDatePickerDialog({
+      selected: selectedDate,
+      onDateAccept: (date: Date) => {
+        DataModel.updateTaskDueAt(taskId, date.getTime());
+        const nextTask = DataModel.updateTaskReminderAt(taskId, date.getTime());
+        if (nextTask !== undefined) {
+          ReminderService.syncTask(nextTask);
+        }
+        this.refreshTasks();
+      }
+    });
+  }
+
+  @Builder statsCard() {
+    Column({ space: 10 }) {
+      Text('Hi，开始安排今天吧')
+        .fontSize($r('app.float.hero_title_font_size'))
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r('app.color.hero_title'))
+        .width(CommonConstants.FULL_LENGTH)
+        .textAlign(TextAlign.Start)
+
+      Text(this.getTodayText())
+        .fontSize($r('app.float.meta_font_size'))
+        .fontColor($r('app.color.meta_text'))
+        .width(CommonConstants.FULL_LENGTH)
+        .textAlign(TextAlign.Start)
+
+      Progress({
+        value: this.getCompletedCount(),
+        total: this.totalTasks.length === 0 ? 1 : this.totalTasks.length,
+        type: ProgressType.Linear
+      })
+        .color($r('app.color.progress_fill'))
+        .backgroundColor($r('app.color.progress_track'))
+        .height($r('app.float.progress_height'))
+        .borderRadius(CommonConstants.BORDER_RADIUS)
+
+      Row() {
+        Text(`已完成 ${this.getCompletedCount()} 项`)
+          .fontSize($r('app.float.meta_font_size'))
+          .fontColor($r('app.color.hero_title'))
+        Blank()
+        Text(`待处理 ${this.getPendingCount()} 项`)
+          .fontSize($r('app.float.meta_font_size'))
+          .fontColor($r('app.color.meta_text'))
+      }
+      .width(CommonConstants.FULL_LENGTH)
+
+      Text(`提醒调度：${ReminderService.getScheduledReminderCount()} 项`)
+        .fontSize($r('app.float.meta_font_size'))
+        .fontColor($r('app.color.meta_text'))
+        .width(CommonConstants.FULL_LENGTH)
+        .textAlign(TextAlign.Start)
+    }
+    .padding($r('app.float.hero_padding'))
+    .borderRadius(CommonConstants.BORDER_RADIUS)
+    .backgroundColor($r('app.color.hero_background'))
+  }
+
+  @Builder editorCard() {
+    Column({ space: 12 }) {
+      Text(this.editingTaskId === null ? '新增任务' : '编辑任务')
+        .fontSize($r('app.float.section_title_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.hero_title'))
+        .width(CommonConstants.FULL_LENGTH)
+        .textAlign(TextAlign.Start)
+
+      TextInput({
+        placeholder: '输入待办内容',
+        text: this.draftTitle
+      })
+        .type(InputType.Normal)
+        .fontSize($r('app.float.meta_font_size'))
+        .backgroundColor($r('app.color.editor_input_background'))
+        .borderRadius(CommonConstants.BORDER_RADIUS)
+        .height($r('app.float.editor_input_height'))
+        .onChange((value: string) => {
+          this.draftTitle = value;
+        })
+
+      Row({ space: 10 }) {
+        Button(`截止日期：${this.formatTimestamp(this.draftDueAt)}`)
+          .layoutWeight(1)
+          .height($r('app.float.action_button_height'))
+          .backgroundColor($r('app.color.action_button_background'))
+          .fontColor($r('app.color.action_button_text'))
+          .borderRadius(CommonConstants.BORDER_RADIUS)
+          .onClick(() => {
+            this.handlePickDraftDueAt();
+          })
+
+        Button(this.draftDueAt === null ? '设提醒' : '清日期')
+          .height($r('app.float.action_button_height'))
+          .backgroundColor($r('app.color.action_button_background'))
+          .fontColor($r('app.color.action_button_text'))
+          .borderRadius(CommonConstants.BORDER_RADIUS)
+          .onClick(() => {
+            if (this.draftDueAt === null) {
+              this.handlePickDraftDueAt();
+            } else {
+              this.draftDueAt = null;
+            }
+          })
+      }
+      .width(CommonConstants.FULL_LENGTH)
+
+      Row({ space: 10 }) {
+        Button(this.editingTaskId === null ? '添加任务' : '保存修改')
+          .layoutWeight(1)
+          .height($r('app.float.primary_button_height'))
+          .backgroundColor($r('app.color.primary_button'))
+          .fontColor($r('app.color.primary_button_text'))
+          .borderRadius(CommonConstants.BORDER_RADIUS)
+          .onClick(() => {
+            this.handleSaveTask();
+          })
+
+        Button('重置')
+          .height($r('app.float.primary_button_height'))
+          .backgroundColor($r('app.color.action_button_background'))
+          .fontColor($r('app.color.action_button_text'))
+          .borderRadius(CommonConstants.BORDER_RADIUS)
+          .onClick(() => {
+            this.resetDraft();
+          })
+      }
+      .width(CommonConstants.FULL_LENGTH)
+    }
+    .padding($r('app.float.editor_card_padding'))
+    .borderRadius(CommonConstants.BORDER_RADIUS)
+    .backgroundColor($r('app.color.editor_background'))
+  }
+
+  @Builder emptyState() {
+    Column({ space: 8 }) {
+      Text('还没有待办事项')
+        .fontSize($r('app.float.section_title_font_size'))
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.hero_title'))
+      Text('先在上面的输入框里添加一条今天想完成的任务。')
+        .fontSize($r('app.float.meta_font_size'))
+        .fontColor($r('app.color.meta_text'))
+        .textAlign(TextAlign.Center)
+    }
+    .width(CommonConstants.FULL_LENGTH)
+    .padding($r('app.float.empty_state_padding'))
+    .borderRadius(CommonConstants.BORDER_RADIUS)
+    .backgroundColor($r('app.color.editor_background'))
   }
 
   build() {
-    Column({ space: CommonConstants.COLUMN_SPACE }) {
-      Text($r('app.string.page_title'))
-        .fontSize($r('app.float.title_font_size'))
-        .fontWeight(FontWeight.Bold)
-        .lineHeight($r('app.float.title_font_height'))
-        .width(CommonConstants.TITLE_WIDTH)
-        .margin({
-          top: $r('app.float.title_margin_top'),
-          bottom: $r('app.float.title_margin_bottom')
-        })
-        .textAlign(TextAlign.Start)
+    Scroll() {
+      Column({ space: CommonConstants.COLUMN_SPACE }) {
+        this.statsCard()
+        this.editorCard()
 
-      ForEach(this.totalTasks, (item: string) => {
-        ToDoItem({ content: item })
-      }, (item: string) => JSON.stringify(item))
+        Text($r('app.string.task_section_title'))
+          .fontSize($r('app.float.section_title_font_size'))
+          .fontWeight(FontWeight.Medium)
+          .width(CommonConstants.FULL_LENGTH)
+          .textAlign(TextAlign.Start)
+
+        if (this.totalTasks.length === 0) {
+          this.emptyState()
+        } else {
+          ForEach(this.totalTasks, (item: Task) => {
+            ToDoItem({
+              task: item,
+              onToggle: (taskId: string) => {
+                this.handleToggleTask(taskId);
+              },
+              onEditTask: (taskId: string) => {
+                this.handleEditTask(taskId);
+              },
+              onDelete: (taskId: string) => {
+                this.handleDeleteTask(taskId);
+              },
+              onEditDueDate: (taskId: string) => {
+                this.handlePickTaskDueAt(taskId);
+              },
+              onReminderToggle: (taskId: string) => {
+                this.handleReminderToggle(taskId);
+              }
+            })
+          }, (item: Task) => item.id)
+        }
+      }
+      .width(CommonConstants.FULL_LENGTH)
+      .padding($r('app.float.page_padding'))
     }
+    .scrollable(ScrollDirection.Vertical)
     .width(CommonConstants.FULL_LENGTH)
     .height(CommonConstants.FULL_LENGTH)
     .backgroundColor($r('app.color.page_background'))

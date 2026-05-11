@@ -7,6 +7,62 @@
     {
       "name": "page_background",
       "value": "#F1F3F5"
+    },
+    {
+      "name": "hero_background",
+      "value": "#FFF6E8"
+    },
+    {
+      "name": "hero_title",
+      "value": "#2C241B"
+    },
+    {
+      "name": "meta_text",
+      "value": "#6A625A"
+    },
+    {
+      "name": "progress_fill",
+      "value": "#FF8C42"
+    },
+    {
+      "name": "progress_track",
+      "value": "#F3D7BF"
+    },
+    {
+      "name": "editor_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "editor_input_background",
+      "value": "#F6F4F1"
+    },
+    {
+      "name": "primary_button",
+      "value": "#1F7A5C"
+    },
+    {
+      "name": "primary_button_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "action_button_background",
+      "value": "#E8ECE8"
+    },
+    {
+      "name": "action_button_text",
+      "value": "#314138"
+    },
+    {
+      "name": "task_due_soon_background",
+      "value": "#FFF7D8"
+    },
+    {
+      "name": "task_overdue_background",
+      "value": "#FFE3DE"
+    },
+    {
+      "name": "reminder_text",
+      "value": "#B75D12"
     }
   ]
 }

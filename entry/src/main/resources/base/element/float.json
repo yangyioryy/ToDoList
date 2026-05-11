@@ -31,6 +31,54 @@
     {
       "name": "list_item_height",
       "value": "64vp"
+    },
+    {
+      "name": "meta_font_size",
+      "value": "14fp"
+    },
+    {
+      "name": "hero_title_font_size",
+      "value": "24fp"
+    },
+    {
+      "name": "section_title_font_size",
+      "value": "18fp"
+    },
+    {
+      "name": "progress_height",
+      "value": "8vp"
+    },
+    {
+      "name": "action_button_height",
+      "value": "34vp"
+    },
+    {
+      "name": "primary_button_height",
+      "value": "42vp"
+    },
+    {
+      "name": "editor_input_height",
+      "value": "48vp"
+    },
+    {
+      "name": "page_padding",
+      "value": "16vp"
+    },
+    {
+      "name": "hero_padding",
+      "value": "18vp"
+    },
+    {
+      "name": "editor_card_padding",
+      "value": "16vp"
+    },
+    {
+      "name": "card_padding",
+      "value": "16vp"
+    },
+    {
+      "name": "empty_state_padding",
+      "value": "24vp"
     }
   ]
 }

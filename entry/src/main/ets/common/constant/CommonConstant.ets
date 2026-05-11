@@ -56,16 +56,4 @@ export default class CommonConstants {
    * Space of column.
    */
   static readonly COLUMN_SPACE: number = 16;
-
-  /**
-   * agents data.
-   */
-  static readonly TODO_DATA: Array<string> = [
-    "早起晨练",
-    "准备早餐",
-    "阅读名著",
-    "学习ArkTS",
-    "看剧放松"
-  ];
 }
-
