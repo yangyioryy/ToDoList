@@ -69,16 +69,27 @@ struct ToDoListPage {
     return 'Hi，晚上好！';
   }
 
+  private isToday(timestamp: number | null): boolean {
+    if (timestamp === null) {
+      return false;
+    }
+    const target = new Date(timestamp);
+    const now = new Date();
+    return target.getFullYear() === now.getFullYear()
+      && target.getMonth() === now.getMonth()
+      && target.getDate() === now.getDate();
+  }
+
   private getCompletedCount(): number {
-    return this.totalTasks.filter((task: Task) => task.isCompleted).length;
+    return this.totalTasks.filter((task: Task) => task.isCompleted && this.isToday(task.completedAt)).length;
   }
 
   private getPendingCount(): number {
-    return this.totalTasks.length - this.getCompletedCount();
+    return this.totalTasks.filter((task: Task) => !task.isCompleted).length;
   }
 
   private getCompletedTasks(): Array<Task> {
-    return this.totalTasks.filter((task: Task) => task.isCompleted);
+    return this.totalTasks.filter((task: Task) => task.isCompleted && this.isToday(task.completedAt));
   }
 
   private getPendingTasks(): Array<Task> {
@@ -325,7 +336,7 @@ struct ToDoListPage {
     .width(CommonConstants.FULL_LENGTH)
   }
 
-  @Builder groupHeader(title: string, count: number, isCompleted: boolean, isExpanded: boolean, onToggle: () => void) {
+  @Builder groupHeader(title: string, isCompleted: boolean, isExpanded: boolean, onToggle: () => void) {
     Row({ space: 8 }) {
       if (isCompleted) {
         Stack() {
@@ -346,7 +357,7 @@ struct ToDoListPage {
           .border({ width: 2, color: $r('app.color.tab_active') })
       }
 
-      Text(`${title} (${count})`)
+      Text(`${title} (${isCompleted ? this.getCompletedCount() : this.getPendingCount()})`)
         .fontSize($r('app.float.group_title_font_size'))
         .fontWeight(FontWeight.Medium)
         .fontColor($r('app.color.title_primary'))
@@ -625,7 +636,7 @@ struct ToDoListPage {
             this.emptyState()
           } else {
             if (this.getCompletedCount() > 0) {
-              this.groupHeader('已完成', this.getCompletedCount(), true, this.completedExpanded, () => {
+              this.groupHeader('已完成', true, this.completedExpanded, () => {
                 this.completedExpanded = !this.completedExpanded;
               })
               if (this.completedExpanded) {
@@ -636,7 +647,7 @@ struct ToDoListPage {
             }
 
             if (this.getPendingCount() > 0) {
-              this.groupHeader('待完成', this.getPendingCount(), false, this.pendingExpanded, () => {
+              this.groupHeader('待完成', false, this.pendingExpanded, () => {
                 this.pendingExpanded = !this.pendingExpanded;
               })
               if (this.pendingExpanded) {
